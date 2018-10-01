@@ -1,5 +1,7 @@
 import pandas as pd 
 import os
+import shutil
+import argparse
 
 class CsvClean:
     """A module for quickly removing empty rows from csv files
@@ -17,20 +19,61 @@ class CsvClean:
 
     """
 
+    @classmethod
+    def create_empty(cls):
+        return cls()
 
-    def __init__(self, path=None, file=None):
-        if path is not None:
+
+    @classmethod
+    def create_with_file(cls, file):
+        return cls(file=file)
+
+    
+    @classmethod
+    def create_with_path(cls, path):
+        return cls(path=path)
+
+    @classmethod
+    def create_with_file_and_filename(cls, file, new_filename):
+        return cls(file=file, filename=filename)
+
+
+    @classmethod
+    def create_with_file_and_path(cls, path, file):
+        return cls(path, file)
+
+
+    @classmethod
+    def create_with_all(cls, path, file, new_filename):
+        return cls(path, file, filename)
+
+    @staticmethod
+    def _get_files(path):
+        return [c for c in os.listdir(path) if '.csv' in str(c) or '.xlsx' in str(c)]
+
+
+    def __init__(self, path=os.getcwd(), file=None, new_filename=None):
+        
+        if path[-1] != '/':
+            self.path = '{}/'.format(path)
+        else:
             self.path = path
-        else:
-            self.path = os.getcwd()
-        self.path += '/'
-        if file is not None:
-
-            self.file = file
-            self.new_filename = 'new_{}'.format(self.file)
-        else:
-            self.files = [c for c in os.listdir(path) if '.csv' in str(c) or '.xlsx' in str(c)]
+        
+        self.file = file
+        self.new_filename = new_filename
+        
+        if self.file is None:
+            self.files = self._get_files(self.path)
             self.file = False
+        elif file is not type(list) and self.new_filename is None: 
+            self.new_filename = 'new_{}'.format(self.file)
+
+        if self.path != os.getcwd() and self.file != False:
+            shutil.copy('{}{}'.format(self.path, self.file), os.getcwd())
+
+
+    def __del__(self):
+        os.remove(self.file)
 
 
     def _file_writer(self, file):
@@ -65,6 +108,8 @@ class CsvClean:
         else:
             for file in self.files:
                 self.new_filename = '{}{}'.format('new_', file)
-                print(file)
                 self._file_writer(file)
-            
+
+
+
+           
